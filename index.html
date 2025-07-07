@@ -67,10 +67,11 @@
   </form>
 
   <script>
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbyojKrfOpjS1LztJhphLc1nImmKUamZfHTzG4YpC5idk7OLhqFt8_aSxXsQbKCSdo4/exec";
+
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");
     let drawing = false;
-    let offsetY = 0;
 
     function getCanvasOffsetY() {
       const rect = canvas.getBoundingClientRect();
@@ -127,8 +128,22 @@
       const amount = document.getElementById("amount").value;
       const details = document.getElementById("details").value;
       const signature = canvas.toDataURL();
-      alert("送信完了！\n\n名前: " + name + "\n金額: " + amount + "円\n内訳: " + details);
-      console.log("署名画像：", signature);
+
+      fetch(scriptUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, amount, details, signature }),
+      })
+        .then((res) => res.text())
+        .then((res) => {
+          alert("送信完了！\n\n名前: " + name + "\n金額: " + amount + "円\n内訳: " + details);
+          console.log("署名画像：", signature);
+        })
+        .catch((err) => {
+          alert("送信に失敗しました：" + err);
+        });
     });
   </script>
 </body>
