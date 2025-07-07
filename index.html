@@ -21,6 +21,7 @@
       width: 100%;
       height: 200px;
       touch-action: none;
+      display: block;
     }
     .logo {
       max-width: 120px;
@@ -69,6 +70,13 @@
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");
     let drawing = false;
+    let offsetY = 0;
+
+    function getCanvasOffsetY() {
+      const rect = canvas.getBoundingClientRect();
+      const scaleY = canvas.height / rect.height;
+      return scaleY;
+    }
 
     canvas.addEventListener("mousedown", (e) => {
       drawing = true;
@@ -87,8 +95,9 @@
       e.preventDefault();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
+      const scaleY = getCanvasOffsetY();
+      const x = (touch.clientX - rect.left);
+      const y = (touch.clientY - rect.top) * scaleY;
       drawing = true;
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -99,8 +108,9 @@
       if (!drawing) return;
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
+      const scaleY = getCanvasOffsetY();
+      const x = (touch.clientX - rect.left);
+      const y = (touch.clientY - rect.top) * scaleY;
       ctx.lineTo(x, y);
       ctx.stroke();
     });
@@ -123,4 +133,3 @@
   </script>
 </body>
 </html>
-
