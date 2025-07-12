@@ -9,22 +9,22 @@
       font-family: sans-serif;
       padding: 20px;
       text-align: center;
+      background-color: #f4f4f4;
     }
     input, textarea, button {
       width: 100%;
       margin-bottom: 10px;
       font-size: 16px;
-      text-align: left;
     }
     canvas {
       border: 1px solid #ccc;
       width: 100%;
       height: 200px;
-      display: block;
       touch-action: none;
+      display: block;
     }
     .logo {
-      max-width: 100px;
+      max-width: 120px;
       margin-bottom: 20px;
     }
     h2 {
@@ -33,6 +33,10 @@
     }
     form {
       text-align: left;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .button-group {
       text-align: center;
@@ -68,48 +72,59 @@
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzur385at_l2rRgOPUtq3sas1m0DfsfLFNoNJht769PFc_-0jDfk5XnslEpsd8p5n3LQQ/exec";
+
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");
     let drawing = false;
 
-    function getCanvasPosition(e) {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 200;
+
+    function getTouchPos(e) {
       const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches[0].clientX) - rect.left;
-      const y = (e.clientY || e.touches[0].clientY) - rect.top;
-      return { x, y };
+      const touch = e.touches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
     }
+
+    canvas.addEventListener("mousedown", e => {
+      drawing = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener("mousemove", e => {
+      if (!drawing) return;
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mouseleave", () => drawing = false);
+
+    canvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      drawing = true;
+      const pos = getTouchPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    });
+
+    canvas.addEventListener("touchmove", e => {
+      e.preventDefault();
+      if (!drawing) return;
+      const pos = getTouchPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener("touchend", () => drawing = false);
 
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
-
-    function startDraw(e) {
-      e.preventDefault();
-      drawing = true;
-      const pos = getCanvasPosition(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    }
-
-    function draw(e) {
-      e.preventDefault();
-      if (!drawing) return;
-      const pos = getCanvasPosition(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
-
-    function endDraw(e) {
-      e.preventDefault();
-      drawing = false;
-    }
-
-    canvas.addEventListener("mousedown", startDraw);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", endDraw);
-    canvas.addEventListener("touchstart", startDraw);
-    canvas.addEventListener("touchmove", draw);
-    canvas.addEventListener("touchend", endDraw);
 
     document.getElementById("receiptForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -121,18 +136,20 @@
       fetch(scriptUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name, amount, details, signature }),
+        body: JSON.stringify({ name, amount, details, signature })
       })
-        .then((res) => res.text())
-        .then((res) => {
-          alert("送信完了！\n\n" + res);
-          clearCanvas();
-        })
-        .catch((err) => {
-          alert("送信に失敗しました：" + err.message);
-        });
+      .then(res => {
+        if (!res.ok) throw new Error("送信エラー: " + res.status);
+        return res.text();
+      })
+      .then(data => {
+        alert("送信完了しました！\n\n" + data);
+      })
+      .catch(err => {
+        alert("送信に失敗しました：" + err.message);
+      });
     });
   </script>
 </body>
