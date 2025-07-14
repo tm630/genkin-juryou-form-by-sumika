@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>現金立替受領フォーム</title>
   <style>
     body {
@@ -12,7 +12,7 @@
     }
     input, textarea, button {
       width: 100%;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       font-size: 16px;
       text-align: left;
     }
@@ -20,44 +20,32 @@
       border: 1px solid #ccc;
       width: 100%;
       height: 200px;
-      touch-action: none;
       display: block;
-    }
-    .logo {
-      max-width: 120px;
-      margin-bottom: 20px;
-    }
-    h2 {
-      margin-top: 10px;
-      margin-bottom: 30px;
-    }
-    form {
-      text-align: left;
+      touch-action: none;
+      margin-bottom: 10px;
     }
     .button-group {
       text-align: center;
-      margin-top: 10px;
     }
     .button-group button {
-      width: auto;
       margin: 5px;
     }
   </style>
 </head>
 <body>
-  <img src="図面枠ロゴ.jpg" alt="sumikaロゴ" class="logo">
   <h2>現金立替受領フォーム</h2>
+
   <form id="receiptForm">
     <label>受領者名：</label>
-    <input type="text" id="name" required />
+    <input type="text" id="name" required>
 
     <label>金額（円）：</label>
-    <input type="number" id="amount" required />
+    <input type="number" id="amount" required>
 
     <label>内訳：</label>
     <textarea id="details" rows="3"></textarea>
 
-    <label>サイン（指で記入）：</label>
+    <label>サイン（画面上で記入）：</label>
     <canvas id="signatureCanvas"></canvas>
 
     <div class="button-group">
@@ -67,7 +55,7 @@
   </form>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbyQdF9jCjEMuvo3DF-HgIQ_E80HdAqYunxdvtZiWD1qx_sww3ekn-W2mmm_sEuMbT1bWA/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzDP-lwrP_RXQsinBquHS45TyV1k2QHRJ0HTlN44AGK-EkMmhDHvx1AOFV9e2knUexSHA/exec";
 
     const canvas = document.getElementById("signatureCanvas");
     const ctx = canvas.getContext("2d");
@@ -84,29 +72,32 @@
         ctx.stroke();
       }
     });
-    canvas.addEventListener("mouseup", () => (drawing = false));
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mouseout", () => drawing = false);
 
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      const x = (touch.clientX - rect.left);
-      const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
       drawing = true;
       ctx.beginPath();
       ctx.moveTo(x, y);
     });
+
     canvas.addEventListener("touchmove", (e) => {
       e.preventDefault();
       if (!drawing) return;
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      const x = (touch.clientX - rect.left);
-      const y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
       ctx.lineTo(x, y);
       ctx.stroke();
     });
-    canvas.addEventListener("touchend", () => (drawing = false));
+
+    canvas.addEventListener("touchend", () => drawing = false);
 
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -123,20 +114,16 @@
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, amount, details }),
+        body: JSON.stringify({ name, amount, details }) // サイン送信なし！
       })
-      .then((res) => {
-        if (!res.ok) throw new Error("HTTPエラー: " + res.status);
-        return res.text();
-      })
-      .then((res) => {
-        alert("送信完了！\n\n" + res);
-      })
-      .catch((err) => {
-        alert("送信に失敗しました：" + err.message);
-      });
+        .then(res => res.text())
+        .then(res => {
+          alert("送信完了！\n\n" + res);
+        })
+        .catch(err => {
+          alert("送信に失敗しました：" + err);
+        });
     });
   </script>
 </body>
 </html>
-
